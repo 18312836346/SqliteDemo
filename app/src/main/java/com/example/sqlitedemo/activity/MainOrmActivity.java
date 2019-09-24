@@ -1,50 +1,36 @@
 package com.example.sqlitedemo.activity;
 
-import android.Manifest;
 import android.app.Activity;
-import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.database.Cursor;
-import android.provider.ContactsContract;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
-import android.support.v7.app.AlertDialog;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
+import android.support.v7.app.AppCompatActivity;
 import android.view.View;
-import android.widget.Adapter;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
-import android.widget.Toast;
 
 import com.example.sqlitedemo.R;
 import com.example.sqlitedemo.adapter.MyCursorAdapter;
-import com.example.sqlitedemo.adapter.StudentAdapter;
 import com.example.sqlitedemo.dao.StudentDao;
 import com.example.sqlitedemo.dao.StudentDaoImpl;
 import com.example.sqlitedemo.entity.Student;
+import com.example.sqlitedemo.entity.StudentOrm;
 import com.example.sqlitedemo.service.StudentService;
 import com.example.sqlitedemo.service.StudentServiceImpl;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity implements View.OnClickListener {
-
-    private Button person;
-
+public class MainOrmActivity extends AppCompatActivity implements View.OnClickListener {
 
 
     private static final int ADD_REQUEST = 100;
     private static final int MODIFY_REQUEST = 101;
 
     private ListView studentList;
-    private List<Student> students;
+    private List <Student> students;
 
 //    private StudentAdapter studentAdapter;
 
@@ -65,7 +51,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private StudentDaoImpl studentDaoImpl;
     private int selectedPos;
 
-    private ArrayList<String> contacts;
 
 
 
@@ -73,10 +58,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate( savedInstanceState );
         setContentView( R.layout.activity_main );
-
-        person = findViewById( R.id.btn_person );
-
-
 
 
         dao =new StudentDaoImpl(this);
@@ -87,7 +68,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         delete = findViewById( R.id.btn_delete );
 
 
-        person.setOnClickListener( this );
+
 
         insert.setOnClickListener( this );
         update.setOnClickListener( this );
@@ -158,7 +139,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
             case R.id.btn_insert:
 
-                Intent intent = new Intent( MainActivity.this, InsertActivity.class );
+                Intent intent = new Intent( MainOrmActivity.this, InsertActivity.class );
                 intent.putExtra( "flag", "添加" );
                 startActivityForResult( intent, ADD_REQUEST );
 
@@ -168,7 +149,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
                 if (selectedStudent != null) {
 
-                    Intent intent1 = new Intent( MainActivity.this, InsertActivity.class );
+                    Intent intent1 = new Intent( MainOrmActivity.this, InsertActivity.class );
                     intent1.putExtra( "flag", "修改" );
 
                     Bundle bundle = new Bundle();
@@ -182,99 +163,24 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
 
             case R.id.btn_delete:
-                if (selectedStudent != null) {
-                    studentService.delete( selectedStudent.getName() );
-                    studentAdapter.changeCursor( dao.selectByCursor() );
-
-
-                }
-                break;
-
-//                                        studentService.delete( selectedStudent.getName() );
-//                                        students.remove( 0);
-//                                        studentAdapter.notifyDataSetInvalidated();
+//              if (selectedStudent!=null){
+//                      studentService.delete( selectedStudent.getName() );
+//                      studentAdapter.changeCursor( dao.selectByCursor() );
 //
 //
-//
-//                                  break;
+//             }
+//             break;
+
+                                        studentService.delete( selectedStudent.getName() );
+                                        students.remove( 0);
+                                        studentAdapter.notifyDataSetInvalidated();
 
 
-            case R.id.btn_person:
 
-                //判断是否有运行时的权限
-                if (ContextCompat.checkSelfPermission( this, Manifest.permission.READ_CONTACTS ) != PackageManager
-                        .PERMISSION_GRANTED) {
-                    ActivityCompat.requestPermissions( this, new String[]{Manifest.permission.READ_CONTACTS},
-                            1 );
+                                  break;
 
-                } else {
-
-                    //读取联系人
-                    readContacts();
-
-                }
-                break;
         }
 
-
-    }
-
-
-    private void readContacts() {
-
-        //1、获取联系人的cursor,组装联系人字符串放入list
-    Cursor cursor = getContentResolver().query( ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
-        null,null,null,null);
-
-    contacts = new ArrayList<>();
-    if (cursor!=null && cursor.moveToFirst()){
-
-        do {
-            String name = cursor.getString( cursor.getColumnIndex(
-                    ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME
-            ) );
-            String phone = cursor.getString( cursor.getColumnIndex(
-                    ContactsContract.CommonDataKinds.Phone.NUMBER
-            ) );
-            contacts.add( name +"："+phone );
-
-        }while(cursor.moveToNext());
-
-        cursor.close();
-
-    }
-
-    //设置Adapter
-    if (contacts.isEmpty()){
-        Toast.makeText( MainActivity.this, "没有联系人", Toast.LENGTH_SHORT ).show();
-        return;
-
-    }
-
-        ArrayAdapter<String> arrayAdapter = new ArrayAdapter <>(MainActivity.this,android.R.layout.simple_list_item_1,contacts );
-        studentList.setAdapter( arrayAdapter );
-      studentList.setOnItemClickListener( new AdapterView.OnItemClickListener() {
-          @Override
-          public void onItemClick(AdapterView <?> parent, View view, int position, long id) {
-
-          }
-      } );
-
-
-    }
-
-
-
-
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult( requestCode, permissions, grantResults );
-
-        if (requestCode==1&&grantResults.length>0&&grantResults[0]==PackageManager.PERMISSION_GRANTED){
-
-            readContacts();
-        }
 
     }
 
@@ -288,21 +194,21 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         if (resultCode != Activity.RESULT_OK) {
             return;
         }
-//        if (data != null) {
-//            Bundle bundle = data.getExtras();
-//            if (bundle == null) {
-//                return;
-//            }
-//            // 更新students列表
-//            selectedStudent = (Student) bundle.get("student");
-//            if (requestCode == MODIFY_REQUEST) {
-//                students.set(selectedPos, selectedStudent);
-//            } else if (requestCode == ADD_REQUEST) {
-//                students.add(selectedStudent);
-//            }
-//            // 刷新ListView
-//            studentAdapter.notifyDataSetChanged();
-//        }
+        if (data != null) {
+            Bundle bundle = data.getExtras();
+            if (bundle == null) {
+                return;
+            }
+            // 更新students列表
+            selectedStudent = (Student) bundle.get("student");
+            if (requestCode == MODIFY_REQUEST) {
+                students.set(selectedPos, selectedStudent);
+            } else if (requestCode == ADD_REQUEST) {
+                students.add(selectedStudent);
+            }
+            // 刷新ListView
+            studentAdapter.notifyDataSetChanged();
+        }
 
         studentAdapter.changeCursor( dao.selectByCursor());
     }
